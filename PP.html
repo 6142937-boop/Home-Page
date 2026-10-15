@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All-in-One Tic-Tac-Toe</title>
+   
+    <!-- =========================================================
+         REFERENCE 1: CSS STYLING
+         Handles the board grid layout, colors, and button animations.
+         ========================================================= -->
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+            color: #00fff0;
+        }
+
+        #status {
+            font-size: 20px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        /* 3x3 Grid Layout Configuration */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 10px;
+            background-color: #16213e;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+
+        /* Styling individual grid square items */
+        .cell {
+            background-color: #0f3460;
+            border: none;
+            border-radius: 5px;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .cell:hover {
+            background-color: #1f4068;
+            transform: scale(1.02);
+        }
+
+        /* Color styling variations for X and O players */
+        .cell.x {
+            color: #e94560;
+        }
+
+        .cell.o {
+            color: #00fff0;
+        }
+
+        #resetBtn {
+            margin-top: 25px;
+            padding: 10px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #1a1a2e;
+            background-color: #00fff0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 255, 240, 0.3);
+            transition: opacity 0.2s;
+        }
+
+        #resetBtn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =========================================================
+         REFERENCE 2: HTML STRUCTURE
+         Defines UI blocks, text containers, and the grid elements.
+         ========================================================= -->
+    <h1>Tic-Tac-Toe</h1>
+    <div id="status">Player X's turn</div>
+
+    <!-- The 9 interactive square boards -->
+    <div class="board">
+        <button class="cell" data-index="0"></button>
+        <button class="cell" data-index="1"></button>
+        <button class="cell" data-index="2"></button>
+        <button class="cell" data-index="3"></button>
+        <button class="cell" data-index="4"></button>
+        <button class="cell" data-index="5"></button>
+        <button class="cell" data-index="6"></button>
+        <button class="cell" data-index="7"></button>
+        <button class="cell" data-index="8"></button>
+    </div>
+
+    <button id="resetBtn">Restart Game</button>
+
+    <!-- =========================================================
+         REFERENCE 3: JAVASCRIPT LOGIC
+         Manages player states, square actions, and validation logic.
+         ========================================================= -->
+    <script>
+        // DOM Element Reference Links
+        const cells = document.querySelectorAll('.cell');
+        const statusDisplay = document.getElementById('status');
+        const resetButton = document.getElementById('resetBtn');
+
+        // Dynamic Game State Variables
+        let boardState = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let isGameActive = true;
+
+        // Winning Combination Index Arrays
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]             // Diagonals
+        ];
+
+        // Process grid interactions when an empty block is selected
+        function handleCellClick(e) {
+            const clickedCell = e.target;
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+
+            // Check if cell is occupied or game loop is halted
+            if (boardState[clickedCellIndex] !== "" || !isGameActive) {
+                return;
+            }
+
+            updateCell(clickedCell, clickedCellIndex);
+            checkResultValidation();
+        }
+
+        // Draw player token visually and record the internal state tracking
+        function updateCell(cell, index) {
+            boardState[index] = currentPlayer;
+            cell.innerText = currentPlayer;
+            cell.classList.add(currentPlayer.toLowerCase());
+        }
+
+        // Cycle turn sequences between active participants
+        function handlePlayerChange() {
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            statusDisplay.innerText = `Player ${currentPlayer}'s turn`;
+        }
+
+        // Loop checks across all variations to deduce end conditions
+        function checkResultValidation() {
+            let roundWon = false;
+
+            for (let i = 0; i < winningConditions.length; i++) {
+                const winCondition = winningConditions[i];
+                let a = boardState[winCondition[0]];
+                let b = boardState[winCondition[1]];
+                let c = boardState[winCondition[2]];
+
+                if (a === '' || b === '' || c === '') {
+                    continue;
+                }
+                if (a === b && b === c) {
+                    roundWon = true;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                statusDisplay.innerText = `Player ${currentPlayer} Wins! 🎉`;
+                isGameActive = false;
+                return;
+            }
+
+            // Draw Condition Verification logic
+            let roundDraw = !boardState.includes("");
+            if (roundDraw) {
+                statusDisplay.innerText = "Game Tied! 🫱🏽‍🫲🏼";
+                isGameActive = false;
+                return;
+            }
+
+            handlePlayerChange();
+        }
+
+        // Resets state logic containers back to entry values
+        function resetGame() {
+            boardState = ["", "", "", "", "", "", "", "", ""];
+            isGameActive = true;
+            currentPlayer = "X";
+            statusDisplay.innerText = "Player X's turn";
+           
+            cells.forEach(cell => {
+                cell.innerText = "";
+                cell.classList.remove('x', 'o');
+            });
+        }
+
+        // Action Listener Binding Triggers
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        resetButton.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>
+
+
